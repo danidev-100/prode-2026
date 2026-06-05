@@ -47,8 +47,8 @@ export default function Navbar() {
           href="/"
           className="flex items-center gap-2 font-bold text-lg tracking-tight shrink-0 group"
         >
-          <span className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 group-hover:border-accent/40 transition-all duration-300">
-            <span className="text-lg">⚽</span>
+          <span className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 group-hover:border-accent/40 transition-all duration-300 overflow-hidden">
+            <img src="/logo.jpg" alt="Prode 2026" className="w-full h-full object-cover" />
           </span>
           <div className="flex flex-col leading-none">
             <span className="text-text-primary group-hover:text-accent transition-colors duration-200 text-sm">
