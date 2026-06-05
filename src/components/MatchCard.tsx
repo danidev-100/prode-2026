@@ -165,7 +165,7 @@ export default function MatchCard({
           {isFinished && homeGoals !== null && awayGoals !== null ? (
             userPrediction ? (
               <>
-                {/* Your prediction — PRIMARY (big, accent color) */}
+                {/* Label + numbers — fixed position in the match row */}
                 <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-accent/70 font-semibold">
                   Tu pronóstico
                 </span>
@@ -176,25 +176,6 @@ export default function MatchCard({
                   <span className="text-sm sm:text-base text-accent/30 font-light">—</span>
                   <span className="text-lg sm:text-xl font-bold tabular-nums text-accent">
                     {userPrediction.awayGoals}
-                  </span>
-                </div>
-                {/* Points */}
-                <div className="text-[10px] sm:text-[11px] leading-tight mt-0.5">
-                  {userPrediction.points !== null && userPrediction.points !== undefined ? (
-                    <span className={`font-bold ${userPrediction.points >= 2 ? "text-accent" : "text-danger"}`}>
-                      {userPrediction.points === 3 ? "🌟 3 puntos" : userPrediction.points === 2 ? "✅ 2 puntos" : "❌ 0 puntos"}
-                    </span>
-                  ) : (
-                    <span className="text-text-muted/50 italic">Puntos: pendiente</span>
-                  )}
-                </div>
-                {/* Real result — SECONDARY (small, muted) */}
-                <div className="text-[10px] sm:text-[11px] leading-tight mt-0.5 pt-0.5 border-t border-border/30">
-                  <span className="text-text-muted/60">
-                    Resultado:{" "}
-                    <span className="font-medium text-text-muted tabular-nums">
-                      {homeGoals}—{awayGoals}
-                    </span>
                   </span>
                 </div>
               </>
@@ -213,11 +194,6 @@ export default function MatchCard({
                     {awayGoals}
                   </span>
                 </div>
-                {isLoggedIn ? (
-                  <span className="text-[10px] sm:text-[11px] text-text-muted/40 italic mt-0.5">
-                    No pronosticaste
-                  </span>
-                ) : null}
               </>
             )
           ) : saved || userPrediction ? (
@@ -287,6 +263,39 @@ export default function MatchCard({
           <span className="font-semibold text-sm sm:text-base truncate">{displayAway}</span>
         </div>
       </div>
+
+      {/* Finished match: points + result below (outside match row — keeps numbers aligned) */}
+      {isFinished && homeGoals !== null && awayGoals !== null && (
+        <div className="flex flex-col items-center gap-0.5 mt-1">
+          {userPrediction ? (
+            <>
+              {/* Points */}
+              <div className="text-[10px] sm:text-[11px] leading-tight">
+                {userPrediction.points !== null && userPrediction.points !== undefined ? (
+                  <span className={`font-bold ${userPrediction.points >= 2 ? "text-accent" : "text-danger"}`}>
+                    {userPrediction.points === 3 ? "🌟 3 puntos" : userPrediction.points === 2 ? "✅ 2 puntos" : "❌ 0 puntos"}
+                  </span>
+                ) : (
+                  <span className="text-text-muted/50 italic">Puntos: pendiente</span>
+                )}
+              </div>
+              {/* Real result — small, muted */}
+              <div className="text-[10px] sm:text-[11px] leading-tight pt-0.5 border-t border-border/30">
+                <span className="text-text-muted/60">
+                  Resultado:{" "}
+                  <span className="font-medium text-text-muted tabular-nums">
+                    {homeGoals}—{awayGoals}
+                  </span>
+                </span>
+              </div>
+            </>
+          ) : isLoggedIn ? (
+            <span className="text-[10px] sm:text-[11px] text-text-muted/40 italic">
+              No pronosticaste
+            </span>
+          ) : null}
+        </div>
+      )}
 
       {/* Venue + stadium feel */}
       <div className="mt-2 flex items-center gap-1.5 text-[10px] sm:text-[11px] text-text-muted/60">
