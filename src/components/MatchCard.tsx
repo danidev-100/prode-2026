@@ -165,10 +165,7 @@ export default function MatchCard({
           {isFinished && homeGoals !== null && awayGoals !== null ? (
             userPrediction ? (
               <>
-                {/* Label + numbers — fixed position in the match row */}
-                <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-accent/70 font-semibold">
-                  Tu pronóstico
-                </span>
+                {/* Numbers only — centered with team names, no label to push down */}
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <span className="text-lg sm:text-xl font-bold tabular-nums text-accent">
                     {userPrediction.homeGoals}
@@ -269,6 +266,10 @@ export default function MatchCard({
         <div className="flex flex-col items-center gap-0.5 mt-1">
           {userPrediction ? (
             <>
+              {/* Label */}
+              <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-accent/70 font-semibold">
+                Tu pronóstico
+              </span>
               {/* Points */}
               <div className="text-[10px] sm:text-[11px] leading-tight">
                 {userPrediction.points !== null && userPrediction.points !== undefined ? (
