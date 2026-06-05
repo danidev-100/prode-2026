@@ -2,13 +2,15 @@
 
 @theme inline {
   --color-bg-primary: #060b14;
-  --color-bg-secondary: #0d1525;
-  --color-bg-tertiary: #131d30;
-  --color-bg-elevated: #1a2740;
+  --color-bg-secondary: #0d1528;
+  --color-bg-tertiary: #131d35;
+  --color-bg-elevated: #1a2745;
   --color-accent: #22c55e;
   --color-accent-hover: #16a34a;
   --color-accent-muted: #064e1e;
+  --color-accent-glow: #4ade80;
   --color-gold: #f59e0b;
+  --color-gold-hover: #d97706;
   --color-gold-muted: #78350f;
   --color-silver: #9ca3af;
   --color-bronze: #d97706;
@@ -21,6 +23,24 @@
   --color-border-hover: #334155;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --animate-shimmer: shimmer 3s ease-in-out infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(34, 197, 94, 0.15); }
+  50% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.35); }
 }
 
 * {
@@ -38,6 +58,84 @@ body {
   color: var(--color-text-primary);
   font-family: var(--font-sans), system-ui, sans-serif;
   line-height: 1.6;
+  position: relative;
+}
+
+/* ---- World Cup 2026 background layers ---- */
+
+/* Layer 1: Ambient light spots (stadium lights feel) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background:
+    radial-gradient(ellipse 600px 400px at 15% 20%, rgba(34, 197, 94, 1), transparent),
+    radial-gradient(ellipse 500px 350px at 75% 60%, rgba(245, 158, 11, 0.7), transparent),
+    radial-gradient(ellipse 400px 500px at 50% 85%, rgba(34, 197, 94, 0.5), transparent),
+    radial-gradient(ellipse 300px 300px at 85% 15%, rgba(59, 130, 246, 0.4), transparent);
+}
+
+/* Layer 2: Hexagonal field mesh (soccer ball + pitch pattern) */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image:
+    /* Horizontal field lines */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 79px,
+      rgba(34, 197, 94, 0.5) 79px,
+      rgba(34, 197, 94, 0.5) 80px
+    ),
+    /* Vertical field lines */
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 79px,
+      rgba(34, 197, 94, 0.4) 79px,
+      rgba(34, 197, 94, 0.4) 80px
+    ),
+    /* Diagonal hex lines */
+    repeating-linear-gradient(
+      60deg,
+      transparent,
+      transparent 50px,
+      rgba(255, 255, 255, 0.03) 50px,
+      rgba(255, 255, 255, 0.03) 51px
+    ),
+    repeating-linear-gradient(
+      -60deg,
+      transparent,
+      transparent 50px,
+      rgba(255, 255, 255, 0.03) 50px,
+      rgba(255, 255, 255, 0.03) 51px
+    );
+}
+
+/* Layer 3: Subtle dot pattern (crowd/stadium) */
+/* Applied via a wrapper class on the body */
+.stadium-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.015;
+  background-image: radial-gradient(circle, rgba(34, 197, 94, 0.6) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Ensure content is above background patterns */
+#__next, main, nav, .relative {
+  position: relative;
+  z-index: 1;
 }
 
 /* Scrollbar */

@@ -52,9 +52,18 @@ export default async function RankingPage() {
 
   return (
     <div className="max-w-2xl mx-auto py-6 sm:py-8 px-4">
-      <h1 className="text-2xl sm:text-3xl font-bold text-text-primary tracking-tight mb-6 sm:mb-8">
-        🏆 Ranking
-      </h1>
+      {/* Header */}
+      <div className="relative mb-6 sm:mb-8">
+        <div className="absolute -inset-2 bg-gradient-to-br from-gold/5 via-transparent to-accent/5 rounded-2xl blur-xl pointer-events-none" />
+        <div className="relative">
+          <span className="inline-flex items-center gap-1.5 bg-gold/10 border border-gold/20 text-gold text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-widest mb-3">
+            🏆 Tabla de posiciones
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary tracking-tight">
+            Ranking <span className="text-gold">Mundial 2026</span>
+          </h1>
+        </div>
+      </div>
 
       {ranked.length === 0 ? (
         <div className="text-center py-16 sm:py-20">

@@ -20,14 +20,14 @@ interface MatchCardProps {
   userPrediction: { homeGoals: number; awayGoals: number } | null
 }
 
-const stageBadge: Record<string, { label: string; color: string }> = {
-  GROUP: { label: "Grupo", color: "bg-bg-tertiary text-text-secondary" },
-  R32: { label: "16avos", color: "bg-accent-muted text-accent" },
-  R16: { label: "8avos", color: "bg-accent-muted text-accent" },
-  QUARTER: { label: "Cuartos", color: "bg-gold-muted text-gold" },
-  SEMI: { label: "Semi", color: "bg-gold-muted text-gold" },
-  THIRD_PLACE: { label: "3er Puesto", color: "bg-bronze/20 text-bronze" },
-  FINAL: { label: "Final", color: "bg-gold-muted text-gold" },
+const stageBadge: Record<string, { label: string; color: string; icon: string }> = {
+  GROUP: { label: "Grupo", color: "bg-bg-tertiary text-text-secondary border-border", icon: "" },
+  R32: { label: "16avos", color: "bg-accent/10 text-accent border-accent/20", icon: "⚡" },
+  R16: { label: "8avos", color: "bg-accent/10 text-accent border-accent/20", icon: "🔥" },
+  QUARTER: { label: "Cuartos", color: "bg-gold/10 text-gold border-gold/20", icon: "⭐" },
+  SEMI: { label: "Semifinal", color: "bg-gold/10 text-gold border-gold/20", icon: "🌟" },
+  THIRD_PLACE: { label: "3er Puesto", color: "bg-bronze/10 text-bronze border-bronze/20", icon: "🥉" },
+  FINAL: { label: "Final", color: "bg-gradient-to-r from-gold/20 to-accent/10 text-gold border-gold/30", icon: "🏆" },
 }
 
 export default function MatchCard({
@@ -104,62 +104,70 @@ export default function MatchCard({
     hour12: false,
   })
 
+  const isKnockout = stage !== "GROUP"
+  const isHighlight = stage === "FINAL" || stage === "SEMI"
+
   return (
-    <div className="group bg-bg-secondary border border-border rounded-xl p-3 sm:p-4 hover:border-border-hover hover:bg-bg-tertiary/50 transition-all duration-200">
-      {/* Header - stacked on mobile, row on sm+ */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-0 mb-3">
-        <div className="flex items-center gap-2">
+    <div
+      className={`group relative bg-bg-secondary border rounded-xl p-3 sm:p-4 transition-all duration-300
+        hover:border-border-hover hover:bg-bg-tertiary/50 hover:shadow-lg hover:shadow-black/10
+        ${isFinished ? "border-border/50" : "border-border"}
+        ${isHighlight ? "ring-1 ring-gold/10 hover:ring-gold/20" : ""}
+      `}
+    >
+      {/* Subtle top accent line for knockout */}
+      {isKnockout && (
+        <div
+          className={`absolute top-0 left-4 right-4 h-[1px] rounded-full ${
+            stage === "FINAL"
+              ? "bg-gradient-to-r from-transparent via-gold to-transparent"
+              : stage === "SEMI" || stage === "QUARTER"
+              ? "bg-gradient-to-r from-transparent via-accent/40 to-transparent"
+              : "bg-gradient-to-r from-transparent via-accent/20 to-transparent"
+          }`}
+        />
+      )}
+
+      {/* Header */}
+      <div className={`flex items-center justify-between gap-1.5 ${isKnockout ? "mt-1" : ""} mb-3`}>
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           <span
-            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider whitespace-nowrap ${badge.color}`}
+            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider whitespace-nowrap border ${badge.color}`}
           >
+            {badge.icon && <span className="mr-0.5">{badge.icon}</span>}
             {badge.label} {group || ""}
           </span>
           <span className="text-[10px] text-text-muted tabular-nums">#{matchNumber}</span>
         </div>
-        <div className="flex items-center gap-1 text-[11px] sm:text-xs text-text-muted">
+        <div className="flex items-center gap-1 text-[10px] sm:text-[11px] text-text-muted shrink-0">
           <span className="capitalize">{dateStr}</span>
           <span>·</span>
           <span className="tabular-nums">{timeStr} hs</span>
         </div>
       </div>
 
-      {/* Match - stacked vertically on mobile, row on sm+ */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-3">
-        {/* Teams row on mobile: Home | Score | Away */}
-        <div className="flex items-center justify-between sm:hidden gap-2">
-          <span className="flex-1 text-right font-semibold text-sm truncate inline-flex items-center justify-end gap-1.5">
-            {displayHome}
-            {getFlagUrl(homeTeam) && (
-              <img src={getFlagUrl(homeTeam)!} alt={homeTeam ?? ""} className="w-5 h-3.5 rounded-[2px] object-cover shadow-sm flex-shrink-0" />
-            )}
-          </span>
-
-          <span className="shrink-0 text-text-muted/30 text-xs font-bold mx-1">VS</span>
-
-          <span className="flex-1 text-left font-semibold text-sm truncate inline-flex items-center gap-1.5">
-            {getFlagUrl(awayTeam) && (
-              <img src={getFlagUrl(awayTeam)!} alt={awayTeam ?? ""} className="w-5 h-3.5 rounded-[2px] object-cover shadow-sm flex-shrink-0" />
-            )}
-            {displayAway}
-          </span>
-        </div>
-
-        {/* Desktop layout: home | score | away */}
-        <div className="hidden sm:flex sm:flex-1 sm:min-w-0 sm:justify-end items-center gap-2">
-          <span className="font-semibold text-sm truncate">{displayHome}</span>
+      {/* Match */}
+      <div className="flex items-center justify-between gap-2 sm:gap-4">
+        {/* Home team */}
+        <div className="flex-1 min-w-0 flex items-center justify-end gap-2">
+          <span className="font-semibold text-sm sm:text-base truncate text-right">{displayHome}</span>
           {getFlagUrl(homeTeam) && (
-            <img src={getFlagUrl(homeTeam)!} alt={homeTeam ?? ""} className="w-6 h-4 rounded-[2px] object-cover shadow-sm flex-shrink-0" />
+            <img
+              src={getFlagUrl(homeTeam)!}
+              alt={homeTeam ?? ""}
+              className="w-7 h-5 sm:w-8 sm:h-5.5 rounded-[3px] object-cover shadow-sm flex-shrink-0 ring-1 ring-white/5"
+            />
           )}
         </div>
 
         {/* Score / Prediction */}
-        <div className="flex flex-col items-center shrink-0">
+        <div className="flex flex-col items-center shrink-0 px-2 sm:px-3">
           {isFinished && homeGoals !== null && awayGoals !== null ? (
             <div className="flex items-center gap-2 sm:gap-3">
               <span className="text-xl sm:text-2xl font-bold tabular-nums text-text-primary">
                 {homeGoals}
               </span>
-              <span className="text-base sm:text-xl text-text-muted font-light">—</span>
+              <span className="text-base sm:text-xl text-text-muted/40 font-light">—</span>
               <span className="text-xl sm:text-2xl font-bold tabular-nums text-text-primary">
                 {awayGoals}
               </span>
@@ -169,7 +177,7 @@ export default function MatchCard({
               <span className="text-base sm:text-lg font-semibold tabular-nums text-accent">
                 {userPrediction?.homeGoals ?? home}
               </span>
-              <span className="text-text-muted text-xs sm:text-sm">—</span>
+              <span className="text-text-muted/30 text-xs sm:text-sm">—</span>
               <span className="text-base sm:text-lg font-semibold tabular-nums text-accent">
                 {userPrediction?.awayGoals ?? away}
               </span>
@@ -183,11 +191,11 @@ export default function MatchCard({
                 value={home}
                 onChange={(e) => setHome(e.target.value)}
                 placeholder="—"
-                className="w-12 h-11 sm:w-11 sm:h-9 text-center text-sm font-semibold bg-bg-tertiary border border-border rounded-lg
+                className="w-11 h-10 sm:w-12 sm:h-9 text-center text-sm font-semibold bg-bg-tertiary border border-border rounded-lg
                   focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none transition-all duration-200
                   placeholder:text-text-muted/30 text-text-primary tabular-nums"
               />
-              <span className="text-text-muted text-xs font-light">vs</span>
+              <span className="text-text-muted/30 text-xs font-light">vs</span>
               <input
                 type="number"
                 min={0}
@@ -195,7 +203,7 @@ export default function MatchCard({
                 value={away}
                 onChange={(e) => setAway(e.target.value)}
                 placeholder="—"
-                className="w-12 h-11 sm:w-11 sm:h-9 text-center text-sm font-semibold bg-bg-tertiary border border-border rounded-lg
+                className="w-11 h-10 sm:w-12 sm:h-9 text-center text-sm font-semibold bg-bg-tertiary border border-border rounded-lg
                   focus:border-accent focus:ring-1 focus:ring-accent/30 outline-none transition-all duration-200
                   placeholder:text-text-muted/30 text-text-primary tabular-nums"
               />
@@ -210,34 +218,42 @@ export default function MatchCard({
               <span className="text-xs text-gold font-medium">Cerrado</span>
             </div>
           ) : (
-            <span className="text-lg sm:text-xl font-bold text-text-muted/20 py-1">VS</span>
+            <span className="text-lg sm:text-xl font-bold text-text-muted/15 py-1">VS</span>
           )}
         </div>
 
-        {/* Away team (desktop) */}
-        <div className="hidden sm:flex sm:flex-1 sm:min-w-0 sm:justify-start items-center gap-2">
+        {/* Away team */}
+        <div className="flex-1 min-w-0 flex items-center gap-2">
           {getFlagUrl(awayTeam) && (
-            <img src={getFlagUrl(awayTeam)!} alt={awayTeam ?? ""} className="w-6 h-4 rounded-[2px] object-cover shadow-sm flex-shrink-0" />
+            <img
+              src={getFlagUrl(awayTeam)!}
+              alt={awayTeam ?? ""}
+              className="w-7 h-5 sm:w-8 sm:h-5.5 rounded-[3px] object-cover shadow-sm flex-shrink-0 ring-1 ring-white/5"
+            />
           )}
-          <span className="font-semibold text-sm truncate">{displayAway}</span>
+          <span className="font-semibold text-sm sm:text-base truncate">{displayAway}</span>
         </div>
       </div>
 
-      {/* Venue */}
-      <div className="mt-2 text-[10px] sm:text-[11px] text-text-muted truncate">
-        {venue}
+      {/* Venue + stadium feel */}
+      <div className="mt-2 flex items-center gap-1.5 text-[10px] sm:text-[11px] text-text-muted/60">
+        <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+        </svg>
+        <span className="truncate">{venue}</span>
       </div>
 
       {/* Actions */}
       <div className="mt-3 min-h-[28px]">
         {showForm && !saved && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full sm:w-auto bg-accent hover:bg-accent-hover text-black font-semibold text-xs px-4 py-2.5 sm:py-1.5 rounded-lg
-                transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 touch-manipulation
-                min-h-[44px] sm:min-h-0"
+              className="w-full sm:w-auto bg-gradient-to-r from-accent to-accent-hover hover:from-accent-glow hover:to-accent text-black font-semibold text-xs px-4 py-2.5 sm:py-1.5 rounded-lg
+                transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95
+                min-h-[44px] sm:min-h-0 shadow-sm shadow-accent/20"
             >
               {saving ? "Guardando..." : "Guardar pronóstico"}
             </button>
@@ -257,7 +273,10 @@ export default function MatchCard({
         )}
 
         {isLocked && userPrediction && (
-          <span className="text-[10px] sm:text-[11px] text-gold/60">
+          <span className="text-[10px] sm:text-[11px] text-gold/60 flex items-center gap-1">
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
             Se bloquea 3hs antes del partido
           </span>
         )}

@@ -44,19 +44,26 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
+    <div className="min-h-[80vh] flex items-center justify-center px-4 relative">
+      {/* Background glow */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="w-64 h-64 bg-accent/5 rounded-full blur-3xl" />
+      </div>
+
+      <div className="w-full max-w-sm relative">
         <div className="text-center mb-8">
-          <span className="text-4xl">⚽</span>
-          <h1 className="text-2xl font-bold text-text-primary mt-3">Crear cuenta</h1>
+          <span className="text-5xl drop-shadow-[0_0_12px_rgba(245,158,11,0.3)]">🏆</span>
+          <h1 className="text-2xl font-bold text-text-primary mt-3">
+            Prode <span className="text-accent">Mundial 2026</span>
+          </h1>
           <p className="text-text-muted text-sm mt-1">
-            Empezá a pronosticar los partidos del Mundial
+            Creá tu cuenta y empezá a pronosticar
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-text-secondary mb-1.5">
+            <label htmlFor="name" className="block text-xs font-medium text-text-secondary mb-1.5 uppercase tracking-wider">
               Nombre
             </label>
             <input
@@ -73,7 +80,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-text-secondary mb-1.5">
+            <label htmlFor="email" className="block text-xs font-medium text-text-secondary mb-1.5 uppercase tracking-wider">
               Email
             </label>
             <input
@@ -90,7 +97,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-text-secondary mb-1.5">
+            <label htmlFor="password" className="block text-xs font-medium text-text-secondary mb-1.5 uppercase tracking-wider">
               Contraseña
             </label>
             <input
@@ -120,8 +127,8 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-11 bg-accent hover:bg-accent-hover text-black font-semibold text-sm rounded-lg
-              transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] mt-2"
+            className="w-full h-11 bg-gradient-to-r from-accent to-accent-hover hover:from-accent-glow hover:to-accent text-black font-semibold text-sm rounded-lg
+              transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] mt-2 shadow-sm shadow-accent/20"
           >
             {loading ? "Creando cuenta..." : "Crear cuenta"}
           </button>
@@ -133,6 +140,13 @@ export default function RegisterPage() {
             </Link>
           </p>
         </form>
+
+        {/* Footer decoration */}
+        <div className="mt-10 flex items-center justify-center gap-2 text-[11px] text-text-muted/40">
+          <span>⚽</span>
+          <span>FIFA World Cup 2026</span>
+          <span>🏟️</span>
+        </div>
       </div>
     </div>
   )

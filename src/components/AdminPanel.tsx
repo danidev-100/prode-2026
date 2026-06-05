@@ -146,19 +146,26 @@ export default function AdminPanel() {
   return (
     <div className="min-h-screen bg-bg-primary px-4 py-6 sm:px-6 max-w-3xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-bold text-text-primary">Panel Admin</h1>
-          <p className="text-sm text-text-muted mt-0.5">
-            {finishedCount} finalizados · {pendingCount} pendientes
-          </p>
+      <div className="relative mb-6">
+        <div className="absolute -inset-2 bg-gradient-to-br from-accent/5 via-transparent to-gold/5 rounded-2xl blur-xl pointer-events-none" />
+        <div className="relative">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="inline-flex items-center gap-1.5 bg-accent/10 border border-accent/20 text-accent text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-widest mb-2">
+                ⚙️ Administración
+              </span>
+              <p className="text-sm text-text-muted mt-0.5">
+                {finishedCount} finalizados · {pendingCount} pendientes
+              </p>
+            </div>
+            <a
+              href="/"
+              className="text-xs text-text-muted hover:text-accent transition-colors"
+            >
+              ← Volver al prode
+            </a>
+          </div>
         </div>
-        <a
-          href="/"
-          className="text-xs text-text-muted hover:text-text-primary transition-colors"
-        >
-          ← Volver al prode
-        </a>
       </div>
 
       {/* Message */}
