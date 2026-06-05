@@ -6,6 +6,7 @@ import MatchCard from "./MatchCard"
 interface Prediction {
   homeGoals: number
   awayGoals: number
+  points: number | null
 }
 
 interface Match {

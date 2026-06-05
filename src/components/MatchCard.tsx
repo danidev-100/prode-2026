@@ -17,7 +17,7 @@ interface MatchCardProps {
   group: string | null
   stage: string
   status: string
-  userPrediction: { homeGoals: number; awayGoals: number } | null
+  userPrediction: { homeGoals: number; awayGoals: number; points: number | null } | null
 }
 
 const stageBadge: Record<string, { label: string; color: string; icon: string }> = {
@@ -161,27 +161,80 @@ export default function MatchCard({
         </div>
 
         {/* Score / Prediction */}
-        <div className="flex flex-col items-center shrink-0 px-2 sm:px-3">
+        <div className="flex flex-col items-center shrink-0 px-2 sm:px-3 gap-1">
           {isFinished && homeGoals !== null && awayGoals !== null ? (
-            <div className="flex items-center gap-2 sm:gap-3">
-              <span className="text-xl sm:text-2xl font-bold tabular-nums text-text-primary">
-                {homeGoals}
-              </span>
-              <span className="text-base sm:text-xl text-text-muted/40 font-light">—</span>
-              <span className="text-xl sm:text-2xl font-bold tabular-nums text-text-primary">
-                {awayGoals}
-              </span>
-            </div>
+            userPrediction ? (
+              <>
+                {/* Your prediction — PRIMARY (big, accent color) */}
+                <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-accent/70 font-semibold">
+                  Tu pronóstico
+                </span>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <span className="text-lg sm:text-xl font-bold tabular-nums text-accent">
+                    {userPrediction.homeGoals}
+                  </span>
+                  <span className="text-sm sm:text-base text-accent/30 font-light">—</span>
+                  <span className="text-lg sm:text-xl font-bold tabular-nums text-accent">
+                    {userPrediction.awayGoals}
+                  </span>
+                </div>
+                {/* Points */}
+                <div className="text-[10px] sm:text-[11px] leading-tight mt-0.5">
+                  {userPrediction.points !== null && userPrediction.points !== undefined ? (
+                    <span className={`font-bold ${userPrediction.points >= 2 ? "text-accent" : "text-danger"}`}>
+                      {userPrediction.points === 3 ? "🌟 3 puntos" : userPrediction.points === 2 ? "✅ 2 puntos" : "❌ 0 puntos"}
+                    </span>
+                  ) : (
+                    <span className="text-text-muted/50 italic">Puntos: pendiente</span>
+                  )}
+                </div>
+                {/* Real result — SECONDARY (small, muted) */}
+                <div className="text-[10px] sm:text-[11px] leading-tight mt-0.5 pt-0.5 border-t border-border/30">
+                  <span className="text-text-muted/60">
+                    Resultado:{" "}
+                    <span className="font-medium text-text-muted tabular-nums">
+                      {homeGoals}—{awayGoals}
+                    </span>
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* No prediction — show real result as primary */}
+                <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-text-muted/50 font-semibold">
+                  Resultado
+                </span>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <span className="text-lg sm:text-xl font-bold tabular-nums text-text-primary">
+                    {homeGoals}
+                  </span>
+                  <span className="text-sm sm:text-base text-text-muted/40 font-light">—</span>
+                  <span className="text-lg sm:text-xl font-bold tabular-nums text-text-primary">
+                    {awayGoals}
+                  </span>
+                </div>
+                {isLoggedIn ? (
+                  <span className="text-[10px] sm:text-[11px] text-text-muted/40 italic mt-0.5">
+                    No pronosticaste
+                  </span>
+                ) : null}
+              </>
+            )
           ) : saved || userPrediction ? (
-            <div className="flex items-center gap-2 sm:gap-3">
-              <span className="text-base sm:text-lg font-semibold tabular-nums text-accent">
-                {userPrediction?.homeGoals ?? home}
+            <>
+              <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-text-muted/50 font-semibold">
+                Tu pronóstico
               </span>
-              <span className="text-text-muted/30 text-xs sm:text-sm">—</span>
-              <span className="text-base sm:text-lg font-semibold tabular-nums text-accent">
-                {userPrediction?.awayGoals ?? away}
-              </span>
-            </div>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="text-base sm:text-lg font-semibold tabular-nums text-accent">
+                  {userPrediction?.homeGoals ?? home}
+                </span>
+                <span className="text-text-muted/30 text-xs sm:text-sm">—</span>
+                <span className="text-base sm:text-lg font-semibold tabular-nums text-accent">
+                  {userPrediction?.awayGoals ?? away}
+                </span>
+              </div>
+            </>
           ) : showForm ? (
             <div className="flex items-center gap-2">
               <input

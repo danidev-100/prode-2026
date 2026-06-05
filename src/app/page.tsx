@@ -2,6 +2,8 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import MatchList from "@/components/MatchList"
 
+export const dynamic = "force-dynamic"
+
 export default async function HomePage() {
   const session = await auth()
 
@@ -11,7 +13,7 @@ export default async function HomePage() {
       predictions: session?.user?.id
         ? {
             where: { userId: session.user.id },
-            select: { homeGoals: true, awayGoals: true },
+            select: { homeGoals: true, awayGoals: true, points: true },
           }
         : false,
     },

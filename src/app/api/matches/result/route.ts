@@ -43,11 +43,11 @@ export async function PUT(req: NextRequest) {
     data,
   })
 
+  // Recalculate points for all predictions on this match
   if (
-    homeGoals !== null &&
-    homeGoals !== undefined &&
-    awayGoals !== null &&
-    awayGoals !== undefined
+    typeof homeGoals === "number" &&
+    typeof awayGoals === "number" &&
+    effectiveStatus === "FINISHED"
   ) {
     const predictions = await prisma.prediction.findMany({
       where: { matchId },
@@ -57,10 +57,9 @@ export async function PUT(req: NextRequest) {
       const points = calculatePoints(
         pred.homeGoals,
         pred.awayGoals,
-        homeGoals as number,
-        awayGoals as number
+        homeGoals,
+        awayGoals
       )
-
       await prisma.prediction.update({
         where: { id: pred.id },
         data: { points },
