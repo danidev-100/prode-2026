@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma"
 import { calculatePoints } from "@/lib/scoring"
 
+export const dynamic = "force-dynamic"
+
 export default async function RankingPage() {
   const users = await prisma.user.findMany({
     include: {
