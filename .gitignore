@@ -41,3 +41,8 @@ yarn-error.log*
 next-env.d.ts
 dev.db
 .vercel
+# Local Pi runtime state
+.atl/
+.pi/
+# Local dev database
+prisma/dev.db
