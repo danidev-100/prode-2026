@@ -17,6 +17,9 @@ model User {
   role          String       @default("USER")
   createdAt     DateTime     @default(now())
   predictions   Prediction[]
+  resetTokens   ResetToken[]
+  leagues       League[]
+  leagueMembers LeagueMember[]
 }
 
 model Match {
@@ -32,6 +35,40 @@ model Match {
   matchNumber Int          @unique
   status      String       @default("SCHEDULED")
   predictions Prediction[]
+}
+
+model ResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+}
+
+model League {
+  id          String         @id @default(cuid())
+  name        String
+  code        String         @unique
+  createdById String
+  createdAt   DateTime       @default(now())
+  members     LeagueMember[]
+  createdBy   User           @relation(fields: [createdById], references: [id])
+}
+
+model LeagueMember {
+  id       String   @id @default(cuid())
+  leagueId String
+  userId   String
+  role     String   @default("MEMBER")
+  joinedAt DateTime @default(now())
+  league   League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([leagueId, userId])
 }
 
 model Prediction {

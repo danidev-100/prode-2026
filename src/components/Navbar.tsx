@@ -74,6 +74,9 @@ export default function Navbar() {
 
 					{session?.user ? (
 						<div className="flex items-center gap-3 ml-2 pl-3 border-l border-border">
+							<Link href="/mis-picks" className={linkClass("/mis-picks")}>
+								📋 Mis pronos
+							</Link>
 							{session.user.role === "ADMIN" && (
 								<Link
 									href="/admin"
@@ -173,6 +176,13 @@ export default function Navbar() {
 
 					{session?.user ? (
 						<>
+							<Link
+								href="/mis-picks"
+								className={mobileLinkClass("/mis-picks")}
+								onClick={() => setMenuOpen(false)}
+							>
+								📋 Mis pronos
+							</Link>
 							{session.user.role === "ADMIN" && (
 								<Link
 									href="/admin"

@@ -86,6 +86,7 @@ export default function MatchCard({
 	const [away, setAway] = useState(userPrediction?.awayGoals?.toString() ?? "");
 	const [saving, setSaving] = useState(false);
 	const [saved, setSaved] = useState(!!userPrediction);
+	const [editing, setEditing] = useState(false);
 	const [error, setError] = useState("");
 
 	const matchDate = new Date(date);
@@ -126,7 +127,15 @@ export default function MatchCard({
 		}
 
 		setSaved(true);
+		setEditing(false);
 		router.refresh();
+	}
+
+	function handleCancelEdit() {
+		setHome(userPrediction?.homeGoals?.toString() ?? "");
+		setAway(userPrediction?.awayGoals?.toString() ?? "");
+		setEditing(false);
+		setError("");
 	}
 
 	const dateStr = matchDate.toLocaleDateString("es-AR", {
@@ -239,7 +248,7 @@ export default function MatchCard({
 								</div>
 							</>
 						)
-					) : saved || userPrediction ? (
+					) : !editing && (saved || userPrediction) ? (
 						<>
 							<span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-text-primary/60 font-semibold">
 								Tu pronóstico
@@ -256,7 +265,7 @@ export default function MatchCard({
 								</span>
 							</div>
 						</>
-					) : showForm ? (
+					) : showForm && (!saved || editing) ? (
 						<div className="flex items-center gap-2">
 							<input
 								type="number"
@@ -396,7 +405,7 @@ export default function MatchCard({
 
 			{/* Actions */}
 			<div className="mt-3 min-h-[28px]">
-				{showForm && !saved && (
+				{showForm && (!saved || editing) && (
 					<div className="flex flex-col sm:flex-row sm:items-center gap-2">
 						<button
 							onClick={handleSave}
@@ -405,8 +414,20 @@ export default function MatchCard({
                 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95
                 min-h-[44px] sm:min-h-0 shadow-sm shadow-accent/20"
 						>
-							{saving ? "Guardando..." : "Guardar pronóstico"}
+							{saving
+								? "Guardando..."
+								: editing
+									? "Actualizar pronóstico"
+									: "Guardar pronóstico"}
 						</button>
+						{editing && (
+							<button
+								onClick={handleCancelEdit}
+								className="text-xs px-3 py-2.5 sm:py-1.5 rounded-lg bg-bg-tertiary text-text-secondary hover:text-text-primary transition-colors border border-border"
+							>
+								Cancelar
+							</button>
+						)}
 						{error && (
 							<span className="text-danger text-xs text-center sm:text-left">
 								{error}
@@ -415,23 +436,31 @@ export default function MatchCard({
 					</div>
 				)}
 
-				{showForm && saved && (
-					<span className="text-xs text-accent font-medium flex items-center gap-1 py-1">
-						<svg
-							className="w-3.5 h-3.5 shrink-0"
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke="currentColor"
-							strokeWidth={2.5}
+				{showForm && saved && !editing && (
+					<div className="flex items-center gap-3 py-1">
+						<span className="text-xs text-accent font-medium flex items-center gap-1">
+							<svg
+								className="w-3.5 h-3.5 shrink-0"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+								strokeWidth={2.5}
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									d="M5 13l4 4L19 7"
+								/>
+							</svg>
+							Pronóstico guardado
+						</span>
+						<button
+							onClick={() => setEditing(true)}
+							className="text-xs text-accent hover:text-accent-glow transition-colors font-medium underline underline-offset-2 decoration-accent/30 hover:decoration-accent/60"
 						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								d="M5 13l4 4L19 7"
-							/>
-						</svg>
-						Pronóstico guardado
-					</span>
+							Editar
+						</button>
+					</div>
 				)}
 
 				{isLocked && userPrediction && (

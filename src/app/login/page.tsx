@@ -116,6 +116,11 @@ export default function LoginPage() {
               Registrate gratis
             </Link>
           </p>
+          <p className="text-sm text-center text-text-muted mt-3">
+            <Link href="/forgot-password" className="text-text-muted hover:text-accent text-xs transition-colors underline underline-offset-2 decoration-border hover:decoration-accent/50">
+              Olvidé mi contraseña
+            </Link>
+          </p>
         </form>
 
         {/* Footer decoration */}
