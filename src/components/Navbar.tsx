@@ -73,7 +73,10 @@ export default function Navbar() {
 					</Link>
 
 					{session?.user ? (
-						<div className="flex items-center gap-3 ml-2 pl-3 border-l border-border">
+						<div className="flex items-center gap-2 ml-2 pl-3 border-l border-border">
+							<Link href="/ligas" className={linkClass("/ligas")}>
+								👥 Ligas
+							</Link>
 							<Link href="/mis-picks" className={linkClass("/mis-picks")}>
 								📋 Mis pronos
 							</Link>
@@ -176,6 +179,13 @@ export default function Navbar() {
 
 					{session?.user ? (
 						<>
+							<Link
+								href="/ligas"
+								className={mobileLinkClass("/ligas")}
+								onClick={() => setMenuOpen(false)}
+							>
+								👥 Ligas
+							</Link>
 							<Link
 								href="/mis-picks"
 								className={mobileLinkClass("/mis-picks")}
