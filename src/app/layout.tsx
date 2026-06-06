@@ -38,14 +38,15 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-bg-primary text-text-primary relative">
-        {/* Background image — right side, fixed, 30% opacity, faded */}
+        {/* Background image — right side, absolute (no mobile jump), faded */}
         <div
-          className="fixed inset-0 pointer-events-none z-0"
+          className="absolute inset-0 pointer-events-none z-0 overflow-hidden"
           style={{
             backgroundImage: "url('/messicopa.webp')",
             backgroundPosition: "right center",
             backgroundRepeat: "no-repeat",
             backgroundSize: "contain",
+            backgroundAttachment: "scroll",
             opacity: 0.22,
             maskImage: "linear-gradient(to right, transparent 0%, black 30%, black 100%)",
             WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 30%, black 100%)",
