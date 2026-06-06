@@ -38,6 +38,17 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-bg-primary text-text-primary relative">
+        {/* Background image — right side, fixed, 30% opacity */}
+        <div
+          className="fixed inset-0 pointer-events-none z-0"
+          style={{
+            backgroundImage: "url('/messicopa.webp')",
+            backgroundPosition: "right center",
+            backgroundRepeat: "no-repeat",
+            backgroundSize: "contain",
+            opacity: 0.3,
+          }}
+        />
         <SessionProvider>
           <Navbar />
           <main className="flex-1 relative z-10">{children}</main>
