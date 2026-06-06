@@ -38,7 +38,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-bg-primary text-text-primary relative">
-        {/* Background image — right side, fixed, 30% opacity */}
+        {/* Background image — right side, fixed, 30% opacity, faded */}
         <div
           className="fixed inset-0 pointer-events-none z-0"
           style={{
@@ -47,6 +47,8 @@ export default function RootLayout({
             backgroundRepeat: "no-repeat",
             backgroundSize: "contain",
             opacity: 0.3,
+            maskImage: "linear-gradient(to right, transparent 0%, black 30%, black 100%)",
+            WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 30%, black 100%)",
           }}
         />
         <SessionProvider>
