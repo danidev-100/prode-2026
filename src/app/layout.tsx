@@ -46,7 +46,6 @@ export default function RootLayout({
 					{/* Footer */}
 					<footer className="relative z-10 border-t border-border/50 bg-bg-primary/80 backdrop-blur-sm mt-auto">
 						<div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between text-[10px] sm:text-xs text-text-muted">
-							<span>⚽ Prode Mundial 2026</span>
 							<span>Creada por Daniel Fernandez</span>
 							<span>11 Jun – 19 Jul · 🇨🇦 🇲🇽 🇺🇸</span>
 						</div>
