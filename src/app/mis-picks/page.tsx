@@ -110,6 +110,38 @@ export default async function MisPicksPage() {
 		return acc + pts;
 	}, 0);
 
+	const effectiveness =
+		finished.length > 0
+			? Math.round(((exactos + acertados) / finished.length) * 100)
+			: 0;
+	const avgPts =
+		finished.length > 0 ? (totalPoints / finished.length).toFixed(1) : "0.0";
+
+	const groupFinished = finished.filter((m) => m.stage === "GROUP");
+	const knockoutFinished = finished.filter((m) => m.stage !== "GROUP");
+	const groupPts = groupFinished.reduce((acc, m) => {
+		const pts =
+			m.prediction!.points ??
+			calculatePoints(
+				m.prediction!.homeGoals,
+				m.prediction!.awayGoals,
+				m.homeGoals!,
+				m.awayGoals!,
+			);
+		return acc + pts;
+	}, 0);
+	const knockoutPts = knockoutFinished.reduce((acc, m) => {
+		const pts =
+			m.prediction!.points ??
+			calculatePoints(
+				m.prediction!.homeGoals,
+				m.prediction!.awayGoals,
+				m.homeGoals!,
+				m.awayGoals!,
+			);
+		return acc + pts;
+	}, 0);
+
 	return (
 		<>
 			{/* Enzo background — right side, fixed, 22% opacity, faded */}
@@ -153,6 +185,46 @@ export default async function MisPicksPage() {
 					<StatCard label="Exactos" value={exactos} color="accent" />
 					<StatCard label="Acertados" value={acertados} color="accent" />
 					<StatCard label="Errados" value={errados} color="danger" />
+				</div>
+
+				{/* Extended stats */}
+				<div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
+					<div className="bg-bg-secondary/50 border border-border/30 rounded-lg px-3 py-2 text-center">
+						<div className="text-xs text-text-secondary">Efectividad</div>
+						<div
+							className={`text-lg font-bold tabular-nums ${effectiveness >= 60 ? "text-accent" : effectiveness >= 40 ? "text-gold" : "text-danger"}`}
+						>
+							{effectiveness}%
+						</div>
+						<div className="text-[10px] text-text-muted">
+							{exactos + acertados}/{finished.length} aciertos
+						</div>
+					</div>
+					<div className="bg-bg-secondary/50 border border-border/30 rounded-lg px-3 py-2 text-center">
+						<div className="text-xs text-text-secondary">Promedio</div>
+						<div className="text-lg font-bold tabular-nums text-text-primary">
+							{avgPts}
+						</div>
+						<div className="text-[10px] text-text-muted">pts por partido</div>
+					</div>
+					<div className="bg-bg-secondary/50 border border-border/30 rounded-lg px-3 py-2 text-center">
+						<div className="text-xs text-text-secondary">Grupos</div>
+						<div className="text-lg font-bold tabular-nums text-accent">
+							{groupPts}
+						</div>
+						<div className="text-[10px] text-text-muted">
+							{groupFinished.length} partidos
+						</div>
+					</div>
+					<div className="bg-bg-secondary/50 border border-border/30 rounded-lg px-3 py-2 text-center">
+						<div className="text-xs text-text-secondary">Eliminatorias</div>
+						<div className="text-lg font-bold tabular-nums text-gold">
+							{knockoutPts}
+						</div>
+						<div className="text-[10px] text-text-muted">
+							{knockoutFinished.length} partidos
+						</div>
+					</div>
 				</div>
 
 				{/* Pending-only row */}

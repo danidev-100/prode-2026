@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { getFlagUrl } from "@/lib/flags";
@@ -88,6 +88,12 @@ export default function MatchCard({
 	const [saved, setSaved] = useState(!!userPrediction);
 	const [editing, setEditing] = useState(false);
 	const [error, setError] = useState("");
+	const [now, setNow] = useState(() => Date.now());
+
+	useEffect(() => {
+		const timer = setInterval(() => setNow(Date.now()), 1000);
+		return () => clearInterval(timer);
+	}, []);
 
 	const matchDate = new Date(date);
 	const lockDate = new Date(matchDate.getTime() - 3 * 60 * 60 * 1000);
@@ -295,7 +301,7 @@ export default function MatchCard({
 						</div>
 					) : showLogin ? (
 						<span className="text-xs text-text-primary/50 py-2">—</span>
-					) : isLocked ? (
+					) : isLocked && !isFinished ? (
 						<div className="flex items-center gap-1.5 py-1">
 							<svg
 								className="w-3.5 h-3.5 text-gold"
@@ -311,6 +317,14 @@ export default function MatchCard({
 								/>
 							</svg>
 							<span className="text-xs text-gold font-medium">Cerrado</span>
+						</div>
+					) : !isFinished ? (
+						<div className="flex flex-col items-center py-1">
+							<CountdownTimer
+								targetDate={matchDate}
+								now={now}
+								lockDate={lockDate}
+							/>
 						</div>
 					) : (
 						<span className="text-lg sm:text-xl font-bold text-text-primary/20 py-1">
@@ -484,4 +498,90 @@ export default function MatchCard({
 			</div>
 		</div>
 	);
+}
+
+function CountdownTimer({
+	targetDate,
+	now,
+	lockDate,
+}: {
+	targetDate: Date;
+	now: number;
+	lockDate: Date;
+}) {
+	const diff = targetDate.getTime() - now;
+	const untilLock = lockDate.getTime() - now;
+
+	if (diff <= 0) {
+		return <span className="text-xs text-accent font-medium">⚽ En juego</span>;
+	}
+
+	if (untilLock <= 0) {
+		return (
+			<div className="flex items-center gap-1">
+				<svg
+					className="w-3 h-3 text-gold"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+					strokeWidth={2}
+				>
+					<path
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+					/>
+				</svg>
+				<span className="text-xs text-gold font-medium">Cerrado</span>
+			</div>
+		);
+	}
+
+	// Only show countdown if within 48 hours
+	if (diff > 48 * 60 * 60 * 1000) {
+		return null;
+	}
+
+	const hours = Math.floor(diff / 3600000);
+	const minutes = Math.floor((diff % 3600000) / 60000);
+	const seconds = Math.floor((diff % 60000) / 1000);
+
+	// Under 1 hour: show seconds
+	if (hours < 1) {
+		return (
+			<div className="flex items-center gap-1.5">
+				<span className="relative flex h-2 w-2">
+					<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
+					<span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
+				</span>
+				<span className="text-xs font-semibold tabular-nums text-accent">
+					{String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
+				</span>
+				<span className="text-[10px] text-text-muted">min</span>
+			</div>
+		);
+	}
+
+	// Under 24 hours
+	if (hours < 24) {
+		const relativeLock = Math.floor(untilLock / 3600000);
+		return (
+			<div className="flex items-center gap-1.5">
+				<span className="relative flex h-2 w-2">
+					<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-75" />
+					<span className="relative inline-flex rounded-full h-2 w-2 bg-gold" />
+				</span>
+				<span className="text-xs font-semibold tabular-nums text-gold">
+					{hours}h {minutes}m
+				</span>
+				{relativeLock > 0 && (
+					<span className="text-[10px] text-text-muted">
+						(cierra en {relativeLock}h)
+					</span>
+				)}
+			</div>
+		);
+	}
+
+	return null;
 }

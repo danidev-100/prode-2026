@@ -18,6 +18,9 @@ export default async function RankingPage() {
 			let correctResults = 0;
 			let exactScores = 0;
 			let misses = 0;
+			let groupPoints = 0;
+			let knockoutPoints = 0;
+			let finishedCount = 0;
 
 			for (const pred of user.predictions) {
 				if (
@@ -25,6 +28,7 @@ export default async function RankingPage() {
 					pred.match.homeGoals !== null &&
 					pred.match.awayGoals !== null
 				) {
+					finishedCount++;
 					const pts = calculatePoints(
 						pred.homeGoals,
 						pred.awayGoals,
@@ -35,17 +39,31 @@ export default async function RankingPage() {
 					if (pts >= 2) correctResults++;
 					if (pts === 3) exactScores++;
 					if (pts === 0) misses++;
+					if (pred.match.stage === "GROUP") groupPoints += pts;
+					else knockoutPoints += pts;
 				}
 			}
+
+			const effectiveness =
+				finishedCount > 0
+					? Math.round((correctResults / finishedCount) * 100)
+					: 0;
+			const avgPts =
+				finishedCount > 0 ? (totalPoints / finishedCount).toFixed(1) : "0.0";
 
 			return {
 				id: user.id,
 				name: user.name || "Anónimo",
 				points: totalPoints,
 				predictions: user.predictions.length,
+				finishedPredictions: finishedCount,
 				correctResults,
 				exactScores,
 				misses,
+				effectiveness,
+				avgPts,
+				groupPoints,
+				knockoutPoints,
 			};
 		})
 		.sort((a, b) => b.points - a.points);
@@ -188,7 +206,7 @@ export default async function RankingPage() {
 						{/* Table - responsive */}
 						<div className="bg-transparent border border-border/5 rounded-xl overflow-hidden">
 							{/* Header */}
-							<div className="grid grid-cols-[36px_1fr_56px] sm:grid-cols-[48px_1fr_64px_56px_56px_56px] gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 bg-bg-tertiary/5 border-b border-border/10">
+							<div className="grid grid-cols-[36px_1fr_56px] sm:grid-cols-[48px_1fr_64px_56px_56px_56px_56px_56px] gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 bg-bg-tertiary/5 border-b border-border/10">
 								<span className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
 									#
 								</span>
@@ -205,7 +223,10 @@ export default async function RankingPage() {
 									Exactos
 								</span>
 								<span className="hidden sm:block text-[10px] font-semibold uppercase tracking-wider text-text-muted text-right">
-									Erradas
+									Efect.
+								</span>
+								<span className="hidden sm:block text-[10px] font-semibold uppercase tracking-wider text-text-muted text-right">
+									Prom.
 								</span>
 							</div>
 
@@ -220,7 +241,7 @@ export default async function RankingPage() {
 								return (
 									<div
 										key={user.id}
-										className={`grid grid-cols-[36px_1fr_56px] sm:grid-cols-[48px_1fr_64px_56px_56px_56px] gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 
+										className={`grid grid-cols-[36px_1fr_56px] sm:grid-cols-[48px_1fr_64px_56px_56px_56px_56px_56px] gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 
                     border-b border-border/5 last:border-0 hover:bg-bg-tertiary/5 transition-colors duration-150
                     ${isTop3 ? medalColors[i] : ""}`}
 									>
@@ -249,8 +270,21 @@ export default async function RankingPage() {
 										<span className="hidden sm:block text-right text-xs text-text-muted tabular-nums self-center">
 											{user.exactScores}
 										</span>
-										<span className="hidden sm:block text-right text-xs text-danger tabular-nums self-center">
-											{user.misses}
+										<span className="hidden sm:block text-right text-xs tabular-nums self-center">
+											<span
+												className={`font-semibold ${
+													user.effectiveness >= 60
+														? "text-accent"
+														: user.effectiveness >= 40
+															? "text-gold"
+															: "text-danger"
+												}`}
+											>
+												{user.effectiveness}%
+											</span>
+										</span>
+										<span className="hidden sm:block text-right text-xs text-text-muted tabular-nums self-center">
+											{user.avgPts}
 										</span>
 									</div>
 								);
