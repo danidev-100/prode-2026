@@ -46,7 +46,7 @@ export default function RootLayout({
             backgroundPosition: "right center",
             backgroundRepeat: "no-repeat",
             backgroundSize: "contain",
-            opacity: 0.3,
+            opacity: 0.22,
             maskImage: "linear-gradient(to right, transparent 0%, black 30%, black 100%)",
             WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 30%, black 100%)",
           }}
