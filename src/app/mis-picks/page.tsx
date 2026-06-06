@@ -150,7 +150,7 @@ export default async function MisPicksPage() {
 				style={{
 					width: "100vw",
 					height: "100dvh",
-					backgroundImage: "url('/enzo - copia.jpg')",
+					backgroundImage: "url('/cuti.jpg')",
 					backgroundPosition: "center center",
 					backgroundRepeat: "no-repeat",
 					backgroundSize: "cover",
