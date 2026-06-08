@@ -96,7 +96,7 @@ export default function MatchCard({
 	}, []);
 
 	const matchDate = new Date(date);
-	const lockDate = new Date(matchDate.getTime() - 3 * 60 * 60 * 1000);
+	const lockDate = new Date(matchDate.getTime() - 30 * 60 * 1000);
 	const isLocked = new Date() > lockDate;
 	const isFinished = status === "FINISHED";
 	const isLoggedIn = sessionStatus === "authenticated";

@@ -40,7 +40,10 @@ export default function RootLayout({
 			suppressHydrationWarning
 			data-scroll-behavior="smooth"
 		>
-			<body className="min-h-full flex flex-col bg-bg-primary text-text-primary relative">
+			<body
+				className="min-h-full flex flex-col bg-bg-primary text-text-primary relative"
+				suppressHydrationWarning
+			>
 				<SessionProvider>
 					<Navbar />
 					<main className="flex-1 relative z-10">{children}</main>

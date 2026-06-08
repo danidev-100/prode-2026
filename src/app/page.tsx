@@ -1,53 +1,95 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { fetchAllMatches, mergeApiIntoDbMatch } from "@/lib/fifa-api";
+import { syncResultsFromApi } from "@/lib/fifa-sync";
+import { es } from "@/lib/translate-label";
 import MatchList from "@/components/MatchList";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+	// Sincronizar resultados automáticos desde la API
+	await syncResultsFromApi();
+
 	const session = await auth();
 
-	const matches = await prisma.match.findMany({
-		orderBy: { date: "asc" },
-		include: {
-			predictions: session?.user?.id
-				? {
-						where: { userId: session.user.id },
-						select: { homeGoals: true, awayGoals: true, points: true },
-					}
-				: false,
-		},
+	const [dbMatches, apiMatches] = await Promise.all([
+		prisma.match.findMany({
+			orderBy: { date: "asc" },
+			include: {
+				predictions: session?.user?.id
+					? {
+							where: { userId: session.user.id },
+							select: { homeGoals: true, awayGoals: true, points: true },
+						}
+					: false,
+			},
+		}),
+		fetchAllMatches(),
+	]);
+
+	const serialized = dbMatches.map((m) => {
+		const live = mergeApiIntoDbMatch(
+			{
+				matchNumber: m.matchNumber,
+				homeGoals: m.homeGoals,
+				awayGoals: m.awayGoals,
+				status: m.status,
+			},
+			apiMatches,
+		);
+		return {
+			id: m.id,
+			matchNumber: m.matchNumber,
+			homeTeam: m.homeTeam ? es(m.homeTeam) : m.homeTeam,
+			awayTeam: m.awayTeam ? es(m.awayTeam) : m.awayTeam,
+			homeGoals: live.homeGoals,
+			awayGoals: live.awayGoals,
+			date: m.date.toISOString(),
+			venue: m.venue,
+			group: m.group,
+			stage: m.stage,
+			status: live.status,
+			userPrediction: Array.isArray(m.predictions)
+				? m.predictions[0] || null
+				: null,
+		};
 	});
 
-	const serialized = matches.map((m) => ({
-		id: m.id,
-		matchNumber: m.matchNumber,
-		homeTeam: m.homeTeam,
-		awayTeam: m.awayTeam,
-		homeGoals: m.homeGoals,
-		awayGoals: m.awayGoals,
-		date: m.date.toISOString(),
-		venue: m.venue,
-		group: m.group,
-		stage: m.stage,
-		status: m.status,
-		userPrediction: Array.isArray(m.predictions)
-			? m.predictions[0] || null
-			: null,
-	}));
-
-	const finishedCount = matches.filter((m) => m.status === "FINISHED").length;
-	const totalMatches = matches.length;
+	const finishedCount = dbMatches.filter((m) => {
+		const live = mergeApiIntoDbMatch(
+			{
+				matchNumber: m.matchNumber,
+				homeGoals: m.homeGoals,
+				awayGoals: m.awayGoals,
+				status: m.status,
+			},
+			apiMatches,
+		);
+		return live.status === "FINISHED";
+	}).length;
+	const totalMatches = dbMatches.length;
 
 	// Group stage progress: how many groups have all matches finished
 	const groups = "ABCDEFGHIJKL".split("");
 	const groupsFinished = groups.filter((g) => {
-		const groupMatches = matches.filter(
+		const groupMatches = dbMatches.filter(
 			(m) => m.group === g && m.stage === "GROUP",
 		);
 		return (
 			groupMatches.length === 6 &&
-			groupMatches.every((m) => m.status === "FINISHED")
+			groupMatches.every((m) => {
+				const live = mergeApiIntoDbMatch(
+					{
+						matchNumber: m.matchNumber,
+						homeGoals: m.homeGoals,
+						awayGoals: m.awayGoals,
+						status: m.status,
+					},
+					apiMatches,
+				);
+				return live.status === "FINISHED";
+			})
 		);
 	}).length;
 

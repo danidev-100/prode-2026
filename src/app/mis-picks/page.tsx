@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { calculatePoints } from "@/lib/scoring";
+import { es } from "@/lib/translate-label";
 import MyPicksClient from "./MyPicksClient";
 
 interface SerializedMatch {
@@ -74,8 +75,8 @@ export default async function MisPicksPage() {
 		return {
 			id: m.id,
 			matchNumber: m.matchNumber,
-			homeTeam: m.homeTeam,
-			awayTeam: m.awayTeam,
+			homeTeam: m.homeTeam ? es(m.homeTeam) : m.homeTeam,
+			awayTeam: m.awayTeam ? es(m.awayTeam) : m.awayTeam,
 			homeGoals: m.homeGoals,
 			awayGoals: m.awayGoals,
 			date: m.date.toISOString(),

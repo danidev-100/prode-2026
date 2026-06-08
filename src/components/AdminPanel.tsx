@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { es } from "@/lib/translate-label";
 import { useRouter } from "next/navigation";
 import { getFlagUrl, QUALIFIED_TEAMS } from "@/lib/flags";
 
@@ -326,10 +327,12 @@ export default function AdminPanel() {
 							<div className="flex flex-col gap-3">
 								{dayMatches.map((match) => {
 									const isEditing = editing === match.id;
-									const displayHome =
-										match.homeTeam || `Equipo ${match.group || ""}1`;
-									const displayAway =
-										match.awayTeam || `Equipo ${match.group || ""}2`;
+									const displayHome = match.homeTeam
+										? es(match.homeTeam)
+										: `Equipo ${match.group || ""}1`;
+									const displayAway = match.awayTeam
+										? es(match.awayTeam)
+										: `Equipo ${match.group || ""}2`;
 
 									return (
 										<div
