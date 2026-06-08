@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import "./globals.css";
 
@@ -47,7 +48,17 @@ export default function RootLayout({
 					<footer className="relative z-10 border-t border-border/50 bg-bg-primary/80 backdrop-blur-sm mt-auto">
 						<div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between text-[10px] sm:text-xs text-text-muted">
 							<span>Creada por Daniel Fernandez</span>
-							<span>11 Jun – 19 Jul · 🇨🇦 🇲🇽 🇺🇸</span>
+							<div className="flex items-center gap-3">
+								<Link
+									href="/bases"
+									className="text-danger bg-danger/10 border border-danger/30 rounded-lg px-2.5 py-1 font-semibold
+										hover:bg-danger/20 hover:border-danger/50 transition-all duration-200 animate-blink-link"
+								>
+									Bases y condiciones
+								</Link>
+								<span aria-hidden>·</span>
+								<span>11 Jun – 19 Jul · 🇨🇦 🇲🇽 🇺🇸</span>
+							</div>
 						</div>
 					</footer>
 				</SessionProvider>
