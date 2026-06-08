@@ -45,9 +45,9 @@ export default function Navbar() {
 				>
 					<span className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 group-hover:border-accent/40 transition-all duration-300 overflow-hidden">
 						<img
-							src="/logo.jpg"
+							src="/soccer-ball.svg"
 							alt="Prode 2026"
-							className="w-full h-full object-cover"
+							className="w-full h-full object-contain p-1"
 						/>
 					</span>
 					<div className="flex flex-col leading-none">
