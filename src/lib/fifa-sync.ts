@@ -20,18 +20,21 @@ export async function syncResultsFromApi(): Promise<number> {
 	if (now - lastSync < SYNC_INTERVAL_MS) return 0;
 	lastSync = now;
 
-	const apiMap = await fetchAllMatches();
-	if (!apiMap) return 0;
-
+	// Fetch DB matches con team names para poder mapear por nombre
 	const dbMatches = await prisma.match.findMany({
 		select: {
 			id: true,
 			matchNumber: true,
+			homeTeam: true,
+			awayTeam: true,
 			homeGoals: true,
 			awayGoals: true,
 			status: true,
 		},
 	});
+
+	const apiMap = await fetchAllMatches(dbMatches);
+	if (!apiMap) return 0;
 
 	let updated = 0;
 

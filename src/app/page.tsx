@@ -13,20 +13,19 @@ export default async function HomePage() {
 
 	const session = await auth();
 
-	const [dbMatches, apiMatches] = await Promise.all([
-		prisma.match.findMany({
-			orderBy: { date: "asc" },
-			include: {
-				predictions: session?.user?.id
-					? {
-							where: { userId: session.user.id },
-							select: { homeGoals: true, awayGoals: true, points: true },
-						}
-					: false,
-			},
-		}),
-		fetchAllMatches(),
-	]);
+	const dbMatches = await prisma.match.findMany({
+		orderBy: { date: "asc" },
+		include: {
+			predictions: session?.user?.id
+				? {
+						where: { userId: session.user.id },
+						select: { homeGoals: true, awayGoals: true, points: true },
+					}
+				: false,
+		},
+	});
+
+	const apiMatches = await fetchAllMatches(dbMatches);
 
 	const serialized = dbMatches.map((m) => {
 		const live = mergeApiIntoDbMatch(

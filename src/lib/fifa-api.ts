@@ -11,8 +11,19 @@
 
 const API_BASE = "https://worldcup26.ir";
 
+// Alias de nombres de equipos que difieren entre API y seed
+const TEAM_ALIASES: Record<string, string> = {
+	"democratic republic of the congo": "DR Congo",
+};
+
+export type DbMatchInfo = {
+	matchNumber: number;
+	homeTeam: string | null;
+	awayTeam: string | null;
+};
+
 export type ApiMatch = {
-	id: string; // "1".."104" → matchNumber
+	id: string; // "1".."104" → id interno de la API
 	homeTeam: string;
 	awayTeam: string;
 	homeLabel: string | null; // label for placeholder teams (e.g. "Winner Group A")
@@ -38,6 +49,16 @@ type RawApiMatch = {
 	type: string;
 	local_date: string; // "MM/DD/YYYY HH:mm"
 };
+
+function normalizeName(name: string | null | undefined): string {
+	if (!name) return "";
+	const normalized = TEAM_ALIASES[name.trim().toLowerCase()];
+	return normalized ?? name.trim();
+}
+
+function buildMatchKey(home: string, away: string): string {
+	return `${normalizeName(home)}||${normalizeName(away)}`;
+}
 
 function mapStage(apiType: string): string {
 	switch (apiType) {
@@ -108,14 +129,17 @@ function transformMatch(raw: RawApiMatch): ApiMatch {
 
 /**
  * Fetch todos los partidos desde la API externa.
- * Devuelve los partidos normalizados, indexados por matchNumber.
+ * Si se proveen dbMatches, re-indexa por matchNumber usando nombres de equipos
+ * (la API ordena distinto al seed, así que no podemos usar el id numérico).
  * En caso de error, devuelve null.
  */
-export async function fetchAllMatches(): Promise<Map<number, ApiMatch> | null> {
+export async function fetchAllMatches(
+	dbMatches?: DbMatchInfo[],
+): Promise<Map<number, ApiMatch> | null> {
 	try {
 		const res = await fetch(`${API_BASE}/get/games`, {
 			next: { revalidate: 60 }, // cache 60s en producción
-			signal: AbortSignal.timeout(8000), // timeout 8s
+			signal: AbortSignal.timeout(15000), // timeout 15s
 		});
 
 		if (!res.ok) {
@@ -131,7 +155,7 @@ export async function fetchAllMatches(): Promise<Map<number, ApiMatch> | null> {
 			return null;
 		}
 
-		const map = new Map<number, ApiMatch>();
+		const apiById = new Map<number, ApiMatch>();
 		for (const raw of rawList) {
 			// Incluir partidos con equipos definidos O con labels (knockout placeholder)
 			const hasTeam = raw.home_team_name_en && raw.away_team_name_en;
@@ -140,13 +164,44 @@ export async function fetchAllMatches(): Promise<Map<number, ApiMatch> | null> {
 				const match = transformMatch(raw);
 				const num = parseInt(match.id, 10);
 				if (!isNaN(num)) {
-					map.set(num, match);
+					apiById.set(num, match);
 				}
 			}
 		}
 
-		console.log(`[fifa-api] ${map.size} partidos sincronizados`);
-		return map;
+		// Si no hay DB matches, devolver keyeado por API id (backward compat)
+		if (!dbMatches) {
+			console.log(`[fifa-api] ${apiById.size} partidos (por id API)`);
+			return apiById;
+		}
+
+		// Construir lookup: equipo_normalizado::equipo_normalizado → matchNumber
+		const dbLookup = new Map<string, number>();
+		for (const dbm of dbMatches) {
+			if (dbm.homeTeam && dbm.awayTeam) {
+				dbLookup.set(
+					buildMatchKey(dbm.homeTeam, dbm.awayTeam),
+					dbm.matchNumber,
+				);
+			}
+		}
+
+		// Re-keyear por matchNumber usando match de nombres de equipos
+		const mapped = new Map<number, ApiMatch>();
+		for (const api of apiById.values()) {
+			const home = normalizeName(api.homeTeam || api.homeLabel || "");
+			const away = normalizeName(api.awayTeam || api.awayLabel || "");
+			const key = buildMatchKey(home, away);
+			const mn = dbLookup.get(key);
+			if (mn) {
+				mapped.set(mn, api);
+			}
+		}
+
+		console.log(
+			`[fifa-api] ${mapped.size} partidos mapeados por nombre de equipo`,
+		);
+		return mapped;
 	} catch (err) {
 		console.warn("[fifa-api] error de conexión:", err);
 		return null;

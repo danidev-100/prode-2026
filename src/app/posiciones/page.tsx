@@ -128,10 +128,8 @@ export default async function PosicionesPage() {
 	// Sincronizar resultados automáticos desde la API
 	await syncResultsFromApi();
 
-	const [dbMatches, apiMatches] = await Promise.all([
-		prisma.match.findMany({ orderBy: { date: "asc" } }),
-		fetchAllMatches(),
-	]);
+	const dbMatches = await prisma.match.findMany({ orderBy: { date: "asc" } });
+	const apiMatches = await fetchAllMatches(dbMatches);
 
 	// Overlay API scores onto DB matches
 	const liveMatches = dbMatches.map((m) => {
