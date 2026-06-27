@@ -189,10 +189,26 @@ export async function fetchAllMatches(
 		// Re-keyear por matchNumber usando match de nombres de equipos
 		const mapped = new Map<number, ApiMatch>();
 		for (const api of apiById.values()) {
-			const home = normalizeName(api.homeTeam || api.homeLabel || "");
-			const away = normalizeName(api.awayTeam || api.awayLabel || "");
-			const key = buildMatchKey(home, away);
-			const mn = dbLookup.get(key);
+			let mn: number | undefined;
+
+			// Try #1: match por nombre real de equipos (fase de grupos o knockout con equipos conocidos)
+			if (api.homeTeam && api.awayTeam) {
+				const key = buildMatchKey(
+					normalizeName(api.homeTeam),
+					normalizeName(api.awayTeam),
+				);
+				mn = dbLookup.get(key);
+			}
+
+			// Try #2: match por labels (knockout — la DB tiene placeholders, la API tiene labels equivalentes)
+			if (!mn && api.homeLabel && api.awayLabel) {
+				const key = buildMatchKey(
+					normalizeName(api.homeLabel),
+					normalizeName(api.awayLabel),
+				);
+				mn = dbLookup.get(key);
+			}
+
 			if (mn) {
 				mapped.set(mn, api);
 			}

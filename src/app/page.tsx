@@ -37,11 +37,14 @@ export default async function HomePage() {
 			},
 			apiMatches,
 		);
+		const apiMatch = apiMatches?.get(m.matchNumber);
+		const resolvedHome = apiMatch?.homeTeam || m.homeTeam;
+		const resolvedAway = apiMatch?.awayTeam || m.awayTeam;
 		return {
 			id: m.id,
 			matchNumber: m.matchNumber,
-			homeTeam: m.homeTeam ? es(m.homeTeam) : m.homeTeam,
-			awayTeam: m.awayTeam ? es(m.awayTeam) : m.awayTeam,
+			homeTeam: resolvedHome ? es(resolvedHome) : resolvedHome,
+			awayTeam: resolvedAway ? es(resolvedAway) : resolvedAway,
 			homeGoals: live.homeGoals,
 			awayGoals: live.awayGoals,
 			date: m.date.toISOString(),

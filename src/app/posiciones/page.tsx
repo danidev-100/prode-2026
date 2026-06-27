@@ -131,7 +131,7 @@ export default async function PosicionesPage() {
 	const dbMatches = await prisma.match.findMany({ orderBy: { date: "asc" } });
 	const apiMatches = await fetchAllMatches(dbMatches);
 
-	// Overlay API scores onto DB matches
+	// Overlay API scores + team names onto DB matches
 	const liveMatches = dbMatches.map((m) => {
 		const live = mergeApiIntoDbMatch(
 			{
@@ -142,8 +142,11 @@ export default async function PosicionesPage() {
 			},
 			apiMatches,
 		);
+		const apiMatch = apiMatches?.get(m.matchNumber);
 		return {
 			...m,
+			homeTeam: apiMatch?.homeTeam || m.homeTeam,
+			awayTeam: apiMatch?.awayTeam || m.awayTeam,
 			homeGoals: live.homeGoals,
 			awayGoals: live.awayGoals,
 			status: live.status,

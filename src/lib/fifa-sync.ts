@@ -6,6 +6,7 @@
 import { prisma } from "./prisma";
 import { fetchAllMatches } from "./fifa-api";
 import { calculatePoints } from "./scoring";
+import { canResolveKnockout, resolveKnockoutBracket } from "./knockout";
 
 let lastSync = 0;
 const SYNC_INTERVAL_MS = 30_000; // cada 30 segundos como mínimo
@@ -85,11 +86,60 @@ export async function syncResultsFromApi(): Promise<number> {
 		updated++;
 	}
 
-	if (updated > 0) {
-		console.log(
-			`[fifa-sync] ${updated} partido(s) actualizado(s) con puntos recalculados`,
-		);
-	}
+		// ── Paso 2: Actualizar nombres de equipos en knockout ──
+		// Cuando la API ya sabe qué equipos clasificaron (homeTeam/awayTeam reales),
+		// sobrescribe los placeholders de la DB ("Winner Group A" → "Argentina")
+		const apiResolved = new Set<number>();
+		for (const dbm of dbMatches) {
+			const api = apiMap.get(dbm.matchNumber);
+			if (!api) continue;
 
-	return updated;
+			// Track que este match existe en la API (aunque sea con placeholders)
+			apiResolved.add(dbm.matchNumber);
+
+			const needsHomeUpdate =
+				api.homeTeam && api.homeTeam !== dbm.homeTeam;
+			const needsAwayUpdate =
+				api.awayTeam && api.awayTeam !== dbm.awayTeam;
+
+			if (!needsHomeUpdate && !needsAwayUpdate) continue;
+
+			await prisma.match.update({
+				where: { id: dbm.id },
+				data: {
+					...(needsHomeUpdate ? { homeTeam: api.homeTeam } : {}),
+					...(needsAwayUpdate ? { awayTeam: api.awayTeam } : {}),
+				},
+			});
+
+			updated++;
+		}
+
+		// ── Paso 3: Fallback a resolución local de brackets ──
+		// Solo para matches que la API NO cubre (no están en apiMap).
+		// La API tiene el bracket REAL con 495 combinaciones posibles.
+		// Nuestra resolución local es Greedy y NO coincide con el bracket oficial,
+		// así que NUNCA debe pisar lo que la API ya tiene (aunque sean placeholders).
+		const { ready } = await canResolveKnockout();
+		if (ready) {
+			const knockoutMatches = await prisma.match.findMany({
+				where: {
+					stage: { in: ["R32", "R16", "QUARTER", "SEMI", "THIRD_PLACE", "FINAL"] },
+					matchNumber: { notIn: [...apiResolved] },
+				},
+			});
+
+			if (knockoutMatches.length > 0) {
+				const localResult = await resolveKnockoutBracket();
+				updated += localResult.knockoutMatchesUpdated;
+			}
+		}
+
+		if (updated > 0) {
+			console.log(
+				`[fifa-sync] ${updated} partido(s) actualizado(s) con puntos recalculados`,
+			);
+		}
+
+		return updated;
 }
