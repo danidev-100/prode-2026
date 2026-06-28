@@ -357,6 +357,85 @@ export async function resolveKnockoutBracket(): Promise<ResolveResult> {
   return result
 }
 
+// ─── Annex C: Combinaciones de terceros puestos ─────────────────────────────
+//
+// FIFA publicó 495 combinaciones posibles en Annex C del reglamento.
+// Cada combinación asigna un grupo específico a cada match de R32.
+// Acá están las combinaciones conocidas, keyeadas por el sorted set de
+// grupos cuyos terceros puestos clasifican.
+//
+// Formato: "grupos_ordenados" → { matchNumber: grupo_tercer_puesto }
+const ANNEX_C: Record<string, Record<number, string>> = {
+	// Combinación #67: B, D, E, F, I, J, K, L (nuestro fixture actual)
+	"BDEFIJKL": {
+		74: "D",  // Germany vs Paraguay (3rd D)
+		77: "F",  // France vs Sweden (3rd F)
+		79: "E",  // Mexico vs Ecuador (3rd E)
+		80: "K",  // England vs DR Congo (3rd K)
+		81: "B",  // USA vs Bosnia (3rd B)
+		82: "I",  // Belgium vs Senegal (3rd I)
+		85: "J",  // Switzerland vs Algeria (3rd J)
+		87: "L",  // Colombia vs Ghana (3rd L)
+	},
+};
+
+/**
+ * Determina qué grupos tienen terceros puestos clasificados, busca la
+ * combinación en Annex C, y devuelve el mapping matchNumber → nombre del equipo.
+ *
+ * @param rankedThirds Terceros puestos rankeados (top 8 clasifican)
+ * @param thirdPlaceTeamsMap Map<grupo, TeamStats> con todos los terceros
+ * @returns Map<matchNumber, nombre_del_equipo> o null si no hay combinación conocida
+ */
+export function resolveAnnexC(
+	rankedThirds: TeamStats[],
+	thirdPlaceTeamsMap: Map<string, TeamStats>,
+): Map<number, string> | null {
+	const qualified = rankedThirds.slice(0, 8);
+	if (qualified.length < 8) return null;
+
+	// Construir key: grupos ordenados alfabéticamente
+	const qualifiedGroups = qualified
+		.map((t) => t.group)
+		.sort()
+		.join("");
+	const config = ANNEX_C[qualifiedGroups];
+	if (!config) return null;
+
+	// Mapear matchNumber → nombre del equipo
+	const result = new Map<number, string>();
+	for (const [mnStr, groupLetter] of Object.entries(config)) {
+		const mn = parseInt(mnStr);
+		const team = thirdPlaceTeamsMap.get(groupLetter);
+		if (team) {
+			result.set(mn, team.team);
+		}
+	}
+
+	return result;
+}
+
+/**
+ * Lee la DB, calcula standings, rankea terceros, busca en Annex C,
+ * y devuelve qué partidos de R32 necesitan actualizar sus terceros puestos.
+ *
+ * @returns Map<matchNumber, nombre_del_equipo_tercer_puesto>
+ */
+export async function resolveAnnexCFromDb(): Promise<Map<number, string>> {
+	const standings = await getGroupStandings();
+	if (standings.length < 12) return new Map();
+
+	// Map grupo → third place team
+	const thirdPlaceTeams = new Map<string, TeamStats>();
+	for (const s of standings) {
+		thirdPlaceTeams.set(s.group, s.third);
+	}
+
+	const rankedThirds = rankThirdPlaced(standings);
+	const result = resolveAnnexC(rankedThirds, thirdPlaceTeams);
+	return result ?? new Map();
+}
+
 // ─── Convenience: check if resolution is ready ──────────────────────────────
 
 export async function canResolveKnockout(): Promise<{

@@ -6,7 +6,7 @@
 import { prisma } from "./prisma";
 import { fetchAllMatches } from "./fifa-api";
 import { calculatePoints } from "./scoring";
-import { canResolveKnockout, resolveKnockoutBracket } from "./knockout";
+import { canResolveKnockout, resolveKnockoutBracket, resolveAnnexCFromDb } from "./knockout";
 
 let lastSync = 0;
 const SYNC_INTERVAL_MS = 30_000; // cada 30 segundos como mínimo
@@ -134,7 +134,7 @@ export async function syncResultsFromApi(): Promise<number> {
 			const awayValid =
 				!api.awayTeam || validateTeamInGroup(api.awayTeam, api.awayLabel);
 
-			const updates: Record<string, string> = {};
+			const updates: Record<string, string | null> = {};
 
 			// Regla 1: API tiene equipo real y válido → actualizar
 			if (api.homeTeam && homeValid && api.homeTeam !== dbm.homeTeam) {
@@ -144,11 +144,25 @@ export async function syncResultsFromApi(): Promise<number> {
 				updates.awayTeam = api.awayTeam;
 			}
 
-			// Regla 2: API no tiene equipo real pero tiene label, y DB difiere → revertir a label
-			if (!api.homeTeam && api.homeLabel && dbm.homeTeam !== api.homeLabel) {
+			// Regla 2: API no tiene equipo real pero tiene label → revertir a label.
+			// Solo para campos con label "3rd..." porque el resolvedor local asigna
+			// INCORRECTAMENTE los terceros puestos (usa greedy, no Annex C).
+			// Winner/Runner-up del resolvedor local son correctos (standings determinísticos).
+			function isThirdLabel(label: string | null): boolean {
+				return !!label && label.startsWith("3rd");
+			}
+			if (
+				!api.homeTeam &&
+				isThirdLabel(api.homeLabel) &&
+				dbm.homeTeam !== api.homeLabel
+			) {
 				updates.homeTeam = api.homeLabel;
 			}
-			if (!api.awayTeam && api.awayLabel && dbm.awayTeam !== api.awayLabel) {
+			if (
+				!api.awayTeam &&
+				isThirdLabel(api.awayLabel) &&
+				dbm.awayTeam !== api.awayLabel
+			) {
 				updates.awayTeam = api.awayLabel;
 			}
 
@@ -170,11 +184,40 @@ export async function syncResultsFromApi(): Promise<number> {
 			updated++;
 		}
 
-		// ── Paso 3: Fallback a resolución local de brackets ──
+		// ── Paso 3: Aplicar bracket correcto desde Annex C ──
+		// Para matches donde la API no resolvió el tercer puesto, usamos la
+		// tabla de combinaciones de FIFA (Annex C) que tiene los 495 escenarios
+		// posibles de clasificación de terceros.
+		const annexCAssignments = await resolveAnnexCFromDb();
+		if (annexCAssignments.size > 0) {
+			for (const [mn, teamName] of annexCAssignments) {
+				const dbm = dbMatches.find((m) => m.matchNumber === mn);
+				if (!dbm) continue;
+
+				// Solo actualizar si el match todavía tiene placeholder en el awayTeam
+				// (el equipo real de la API ya se aplicó en paso 2)
+				if (
+					dbm.awayTeam &&
+					!dbm.awayTeam.startsWith("Winner") &&
+					!dbm.awayTeam.startsWith("Runner-up") &&
+					!dbm.awayTeam.startsWith("3rd") &&
+					!dbm.awayTeam.startsWith("Loser")
+				) {
+					continue; // ya tiene equipo real, no tocar
+				}
+
+				if (dbm.awayTeam === teamName) continue; // ya está actualizado
+
+				await prisma.match.update({
+					where: { id: dbm.id },
+					data: { awayTeam: teamName },
+				});
+				updated++;
+			}
+		}
+
+		// ── Paso 4: Fallback a resolución local de brackets ──
 		// Solo para matches que la API NO cubre (no están en apiMap).
-		// La API tiene el bracket REAL con 495 combinaciones posibles.
-		// Nuestra resolución local es Greedy y NO coincide con el bracket oficial,
-		// así que NUNCA debe pisar lo que la API ya tiene (aunque sean placeholders).
 		const { ready } = await canResolveKnockout();
 		if (ready) {
 			const knockoutMatches = await prisma.match.findMany({
