@@ -31,8 +31,20 @@ export async function syncResultsFromApi(): Promise<number> {
 			homeGoals: true,
 			awayGoals: true,
 			status: true,
+			stage: true,
+			group: true,
 		},
 	});
+
+	// Build group→teams lookup para validar consistencia de updates de la API
+	const groupTeams = new Map<string, Set<string>>();
+	for (const m of dbMatches) {
+		if (!m.group || m.stage !== "GROUP") continue;
+		if (!groupTeams.has(m.group)) groupTeams.set(m.group, new Set());
+		const teams = groupTeams.get(m.group)!;
+		if (m.homeTeam) teams.add(m.homeTeam);
+		if (m.awayTeam) teams.add(m.awayTeam);
+	}
 
 	const apiMap = await fetchAllMatches(dbMatches);
 	if (!apiMap) return 0;
@@ -86,9 +98,17 @@ export async function syncResultsFromApi(): Promise<number> {
 		updated++;
 	}
 
-		// ── Paso 2: Actualizar nombres de equipos en knockout ──
-		// Cuando la API ya sabe qué equipos clasificaron (homeTeam/awayTeam reales),
-		// sobrescribe los placeholders de la DB ("Winner Group A" → "Argentina")
+		// ── Paso 2: Actualizar/revertir nombres de equipos en knockout ──
+		// La API es la fuente de verdad para el bracket.
+		//
+		// Reglas:
+		//   1. Si la API tiene un equipo real (homeTeam/awayTeam) y es consistente
+		//      con el grupo → actualizar DB.
+		//   2. Si la API NO tiene equipo real pero SÍ tiene label, y la DB tiene
+		//      un equipo distinto a la label → REVERTIR DB a la label (placeholder).
+		//      Esto deshace asignaciones incorrectas del resolvedor local.
+		//   3. Si la API tiene un equipo real pero NO es consistente con el grupo
+		//      → rechazar update y revertir a label si la DB tiene otro equipo.
 		const apiResolved = new Set<number>();
 		for (const dbm of dbMatches) {
 			const api = apiMap.get(dbm.matchNumber);
@@ -97,19 +117,54 @@ export async function syncResultsFromApi(): Promise<number> {
 			// Track que este match existe en la API (aunque sea con placeholders)
 			apiResolved.add(dbm.matchNumber);
 
-			const needsHomeUpdate =
-				api.homeTeam && api.homeTeam !== dbm.homeTeam;
-			const needsAwayUpdate =
-				api.awayTeam && api.awayTeam !== dbm.awayTeam;
+			// Validar que el equipo resuelto por la API pertenezca al grupo correcto
+			function validateTeamInGroup(
+				teamName: string | null,
+				label: string | null,
+			): boolean {
+				if (!teamName || !label) return true; // sin dato o sin label → no hay validación
+				const groupLetter = label.match(/^(?:Winner|Runner-up) Group ([A-L])$/)?.[1];
+				if (!groupLetter) return true; // tercera posición o label no parseable → skip validación
+				const teams = groupTeams.get(groupLetter);
+				return teams?.has(teamName) ?? false;
+			}
 
-			if (!needsHomeUpdate && !needsAwayUpdate) continue;
+			const homeValid =
+				!api.homeTeam || validateTeamInGroup(api.homeTeam, api.homeLabel);
+			const awayValid =
+				!api.awayTeam || validateTeamInGroup(api.awayTeam, api.awayLabel);
+
+			const updates: Record<string, string> = {};
+
+			// Regla 1: API tiene equipo real y válido → actualizar
+			if (api.homeTeam && homeValid && api.homeTeam !== dbm.homeTeam) {
+				updates.homeTeam = api.homeTeam;
+			}
+			if (api.awayTeam && awayValid && api.awayTeam !== dbm.awayTeam) {
+				updates.awayTeam = api.awayTeam;
+			}
+
+			// Regla 2: API no tiene equipo real pero tiene label, y DB difiere → revertir a label
+			if (!api.homeTeam && api.homeLabel && dbm.homeTeam !== api.homeLabel) {
+				updates.homeTeam = api.homeLabel;
+			}
+			if (!api.awayTeam && api.awayLabel && dbm.awayTeam !== api.awayLabel) {
+				updates.awayTeam = api.awayLabel;
+			}
+
+			// Regla 3: API tiene equipo real pero inválido → revertir a label si DB difiere
+			if (api.homeTeam && !homeValid && api.homeLabel && dbm.homeTeam !== api.homeLabel) {
+				updates.homeTeam = api.homeLabel;
+			}
+			if (api.awayTeam && !awayValid && api.awayLabel && dbm.awayTeam !== api.awayLabel) {
+				updates.awayTeam = api.awayLabel;
+			}
+
+			if (Object.keys(updates).length === 0) continue;
 
 			await prisma.match.update({
 				where: { id: dbm.id },
-				data: {
-					...(needsHomeUpdate ? { homeTeam: api.homeTeam } : {}),
-					...(needsAwayUpdate ? { awayTeam: api.awayTeam } : {}),
-				},
+				data: updates,
 			});
 
 			updated++;
