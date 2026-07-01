@@ -211,23 +211,32 @@ export async function resolveKnockoutBracket(): Promise<ResolveResult> {
 
   // ── Step 3: Assign third-placed teams ──
   const rankedThirds = rankThirdPlaced(standings)
-  const thirdPlaceAssignments = assignThirdPlaceSlots(rankedThirds)
 
-  // Add third-place team names to replacements
-  for (const [matchNumber, team] of thirdPlaceAssignments) {
-    // These are stored as "3rd Group A/B/C/D/F" in the match
-    const slot = THIRD_PLACE_SLOTS.find((s) => s.matchNumber === matchNumber)
-    if (slot) {
-      // The current value in the DB could be anything like "3rd Group A/B/C/D/F"
-      // We need to match by matchNumber and update homeTeam or awayTeam
-      // Let's find the match and update the correct field
-    }
+  // Try Annex C first (FIFA-compliant), fall back to greedy algorithm
+  const thirdPlaceTeamsMap = new Map<string, TeamStats>()
+  for (const s of standings) {
+    thirdPlaceTeamsMap.set(s.group, s.third)
   }
 
-  // Also create entries for the 4 third-placed that qualified but might be referenced
-  for (let i = 0; i < Math.min(8, rankedThirds.length); i++) {
-    const t = rankedThirds[i]
-    // These will be used when updating the matches directly
+  const annexCResult = resolveAnnexC(rankedThirds, thirdPlaceTeamsMap)
+  const useAnnexC = annexCResult !== null && annexCResult.size > 0
+
+  const thirdPlaceAssignments = new Map<number, TeamStats>()
+  if (useAnnexC) {
+    // Convert Annex C result (Map<matchNumber, teamName>) to Map<matchNumber, TeamStats>
+    for (const [mn, teamName] of annexCResult) {
+      // Find the TeamStats for this team
+      const found = rankedThirds.find((t) => t.team === teamName)
+      if (found) {
+        thirdPlaceAssignments.set(mn, found)
+      }
+    }
+  } else {
+    // Fall back to greedy constraint-based algorithm
+    const greedyAssignments = assignThirdPlaceSlots(rankedThirds)
+    for (const [mn, team] of greedyAssignments) {
+      thirdPlaceAssignments.set(mn, team)
+    }
   }
 
   // ── Step 4: Update all knockout matches ──
