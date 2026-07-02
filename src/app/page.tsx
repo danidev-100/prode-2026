@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fetchAllMatches, mergeApiIntoDbMatch } from "@/lib/fifa-api";
 import { syncResultsFromApi } from "@/lib/fifa-sync";
-import { es } from "@/lib/translate-label";
+import { es, isPlaceholder } from "@/lib/translate-label";
 import MatchList from "@/components/MatchList";
 
 export const dynamic = "force-dynamic";
@@ -38,8 +38,11 @@ export default async function HomePage() {
 			apiMatches,
 		);
 		const apiMatch = apiMatches?.get(m.matchNumber);
-		const resolvedHome = apiMatch?.homeTeam || m.homeTeam;
-		const resolvedAway = apiMatch?.awayTeam || m.awayTeam;
+		// Preferir DB si la API devuelve placeholder ("Winner Match XX")
+		const apiHome = apiMatch?.homeTeam;
+		const apiAway = apiMatch?.awayTeam;
+		const resolvedHome = apiHome && !isPlaceholder(apiHome) ? apiHome : m.homeTeam;
+		const resolvedAway = apiAway && !isPlaceholder(apiAway) ? apiAway : m.awayTeam;
 		return {
 			id: m.id,
 			matchNumber: m.matchNumber,

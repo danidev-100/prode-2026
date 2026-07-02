@@ -139,9 +139,9 @@ const matchesCsv = `1|June 11, 2026|1:00 p.m.|Estadio Azteca, Mexico City|Group 
 91|July 5, 2026|4:00 p.m.|MetLife Stadium, East Rutherford|Round of 16|Winner Match 78|Winner Match 76
 92|July 5, 2026|6:00 p.m.|Estadio Azteca, Mexico City|Round of 16|Winner Match 79|Winner Match 80
 93|July 6, 2026|2:00 p.m.|AT&T Stadium, Arlington|Round of 16|Winner Match 83|Winner Match 84
-94|July 6, 2026|5:00 p.m.|Lumen Field, Seattle|Round of 16|Winner Match 82|Winner Match 85
+94|July 6, 2026|5:00 p.m.|Lumen Field, Seattle|Round of 16|Winner Match 81|Winner Match 82
 95|July 7, 2026|12:00 p.m.|Mercedes-Benz Stadium, Atlanta|Round of 16|Winner Match 86|Winner Match 88
-96|July 7, 2026|1:00 p.m.|BC Place, Vancouver|Round of 16|Winner Match 81|Winner Match 87
+96|July 7, 2026|1:00 p.m.|BC Place, Vancouver|Round of 16|Winner Match 85|Winner Match 87
 97|July 9, 2026|4:00 p.m.|Gillette Stadium, Foxborough|Quarterfinals|Winner Match 89|Winner Match 90
 98|July 10, 2026|12:00 p.m.|SoFi Stadium, Inglewood|Quarterfinals|Winner Match 93|Winner Match 94
 99|July 11, 2026|5:00 p.m.|Hard Rock Stadium, Miami Gardens|Quarterfinals|Winner Match 91|Winner Match 92

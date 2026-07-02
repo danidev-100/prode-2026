@@ -216,21 +216,14 @@ export async function syncResultsFromApi(): Promise<number> {
 			}
 		}
 
-		// ── Paso 4: Fallback a resolución local de brackets ──
-		// Solo para matches que la API NO cubre (no están en apiMap).
+		// ── Paso 4: Resolver referencias encadenadas del bracket local ──
+		// La API no resuelve "Winner Match XX" → equipo real, eso lo hace
+		// resolveKnockoutBracket() mirando los resultados de partidos anteriores.
+		// Corre siempre que haya grupos resueltos; es idempotente.
 		const { ready } = await canResolveKnockout();
 		if (ready) {
-			const knockoutMatches = await prisma.match.findMany({
-				where: {
-					stage: { in: ["R32", "R16", "QUARTER", "SEMI", "THIRD_PLACE", "FINAL"] },
-					matchNumber: { notIn: [...apiResolved] },
-				},
-			});
-
-			if (knockoutMatches.length > 0) {
-				const localResult = await resolveKnockoutBracket();
-				updated += localResult.knockoutMatchesUpdated;
-			}
+			const localResult = await resolveKnockoutBracket();
+			updated += localResult.knockoutMatchesUpdated;
 		}
 
 		if (updated > 0) {
